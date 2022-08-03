@@ -22,7 +22,7 @@ pub struct ServerOptions {
     pub port: Option<u16>,
     #[options(help = "Path to authorizations file", meta = "FILE")]
     pub authorizations: Option<String>,
-    #[options(help = "Path to server private key", meta = "FILE")]
+    #[options(help = "URI of server private key", meta = "URI")]
     priv_key: Option<String>,
 }
 
@@ -39,13 +39,17 @@ async fn main() -> anyhow::Result<()> {
         .parse::<IpAddr>()
         .context("Failed to parse IP address")?;
     let port = options.port.unwrap_or(3000);
-    let priv_key = options.priv_key.unwrap_or("server.privkey.pem".to_string());
+    let mut path = std::env::current_dir().context("failed to get current directory")?;
+    path.push("server.pubkey.pem");
+    let priv_key = options
+        .priv_key
+        .unwrap_or(format!("file://{}", path.display()));
     let authorizations = options
         .authorizations
         .unwrap_or("authorizations.toml".to_string());
     let authorizations =
         Authorizations::from_file(authorizations).context("failed to load authorizations")?;
-    let checker = Checker::new(priv_key, authorizations).context("failed to create checker")?;
+    let checker = Checker::new(&priv_key, authorizations).context("failed to create checker")?;
     let config = Config {
         address,
         port,
