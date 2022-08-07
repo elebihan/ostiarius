@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+use cryptoki;
 use openssl;
 use thiserror::Error;
 use toml;
@@ -13,8 +14,8 @@ use url;
 pub enum Error {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Cryptographic error: {0}")]
-    Crypto(#[from] openssl::error::ErrorStack),
+    #[error("OpenSSL error: {0}")]
+    OpenSsl(#[from] openssl::error::ErrorStack),
     #[error("TOML deserialization error: {0}")]
     Toml(#[from] toml::de::Error),
     #[error("URL parsing error: {0}")]
@@ -25,6 +26,10 @@ pub enum Error {
     InvalidPath(std::ffi::OsString),
     #[error("Invalid URI: {0}")]
     InvalidUri(String),
+    #[error("PKCS#11 error: {0}")]
+    Pkcs11(#[from] cryptoki::error::Error),
+    #[error("Invalid key: {0}")]
+    InvalidKey(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
