@@ -4,11 +4,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::{Error, Result};
+use crate::{Error, PrivateKey, Result, RsaPrivateKey};
 use chrono::{DateTime, Utc};
 use openssl::{
     base64,
-    pkey::{Private, Public},
+    pkey::Public,
     rsa::{Padding, Rsa},
 };
 use rand::prelude::*;
@@ -89,7 +89,7 @@ impl Authorizations {
 #[derive(Debug, Clone)]
 pub struct Checker {
     authorizations: Authorizations,
-    priv_key: Rsa<Private>,
+    priv_key: RsaPrivateKey,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -102,9 +102,8 @@ pub struct Authorization {
 }
 
 impl Checker {
-    pub fn new<P: AsRef<Path>>(priv_key_path: P, authorizations: Authorizations) -> Result<Self> {
-        let priv_key: Vec<u8> = std::fs::read(priv_key_path)?;
-        let priv_key = Rsa::private_key_from_pem(&priv_key)?;
+    pub fn new(priv_key_uri: &str, authorizations: Authorizations) -> Result<Self> {
+        let priv_key = RsaPrivateKey::from_uri(priv_key_uri)?;
         let checker = Checker {
             authorizations,
             priv_key,
@@ -115,9 +114,7 @@ impl Checker {
     pub fn check(&self, request: &Request) -> Result<Authorization> {
         let data = base64::decode_block(&&request.challenge)?;
         let mut challenge: Vec<u8> = vec![0; self.priv_key.size() as usize];
-        let size = self
-            .priv_key
-            .private_decrypt(&data, &mut challenge, Padding::PKCS1)?;
+        let size = self.priv_key.decrypt(&data, &mut challenge)?;
         let client = self
             .authorizations
             .clients()
@@ -151,8 +148,9 @@ mod tests {
         let data_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "..", "tests"].iter().collect();
         let path = data_dir.join("authorizations.toml");
         let authorizations = Authorizations::from_file(path)?;
-        let priv_key = data_dir.join("server.privkey.pem");
-        Checker::new(priv_key, authorizations)
+        let path = data_dir.join("server.privkey.pem");
+        let uri = format!("file://{}", path.display());
+        Checker::new(&uri, authorizations)
     }
 
     fn create_requester() -> Result<Requester> {

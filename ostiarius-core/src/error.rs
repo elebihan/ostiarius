@@ -7,6 +7,7 @@
 use openssl;
 use thiserror::Error;
 use toml;
+use url;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -16,10 +17,14 @@ pub enum Error {
     Crypto(#[from] openssl::error::ErrorStack),
     #[error("TOML deserialization error: {0}")]
     Toml(#[from] toml::de::Error),
+    #[error("URL parsing error: {0}")]
+    Url(#[from] url::ParseError),
     #[error("Unauthorized")]
     Unauthorized,
     #[error("Invalid path: {0:?}")]
     InvalidPath(std::ffi::OsString),
+    #[error("Invalid URI: {0}")]
+    InvalidUri(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
