@@ -8,6 +8,7 @@ edition = "2021"
 anyhow = "1.0.59"
 axum = { version = "0.5.13", features = ["macros"] }
 chrono = { version = "0.4.19", features = ["serde"] }
+cryptoki = "0.3.0"
 gumdrop = "0.8.1"
 ostiarius-core = { path = "../ostiarius-core" }
 serde = { version = "1.0", features = ["derive"] }
