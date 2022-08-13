@@ -49,15 +49,16 @@ async fn authorizations_get(
 async fn authorizations_create(
     Json(request): Json<Request>,
     Extension(ctx): Extension<ApiContext>,
-) -> impl IntoResponse {
+) -> std::result::Result<impl IntoResponse, StatusCode> {
     let authorization = match ctx.checker.check(&request) {
-        Err(ref e) if matches!(e, Error::Unauthorized) => return StatusCode::FORBIDDEN,
-        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR,
+        Err(ref e) if matches!(e, Error::Unauthorized) => return Err(StatusCode::FORBIDDEN),
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
         Ok(a) => a,
     };
+    let id = authorization.id;
     let mut authorizations = ctx.database.lock().await;
     authorizations.insert(authorization.id, authorization);
-    StatusCode::CREATED
+    Ok((StatusCode::CREATED, Json(id)))
 }
 
 pub fn router() -> Router {
