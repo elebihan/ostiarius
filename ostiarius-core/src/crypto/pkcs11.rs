@@ -58,7 +58,7 @@ impl TryFrom<&Url> for Pkcs11Params {
 pub struct Pkcs11Url {
     module_path: String,
     token: String,
-    pin: String,
+    pin: Option<String>,
     object: String,
 }
 
@@ -71,8 +71,8 @@ impl Pkcs11Url {
         &self.token
     }
 
-    pub fn pin(&self) -> &str {
-        &self.pin
+    pub fn pin(&self) -> Option<&str> {
+        self.pin.as_deref()
     }
 
     pub fn object(&self) -> &str {
@@ -94,10 +94,7 @@ impl TryFrom<&Url> for Pkcs11Url {
                 .0
                 .remove("token")
                 .ok_or(Error::InvalidUri("missing token".to_string()))?,
-            pin: params
-                .0
-                .remove("pin-value")
-                .ok_or(Error::InvalidUri("missing pin-value".to_string()))?,
+            pin: params.0.remove("pin-value"),
             object: params
                 .0
                 .remove("object")
@@ -132,7 +129,9 @@ impl Pkcs11RsaPrivateKey {
         flags.set_rw_session(false);
         flags.set_serial_session(true);
         let session = pkcs11.open_session_no_callback(slots[0], flags)?;
-        session.login(UserType::User, Some(url.pin()))?;
+        if let Some(pin) = url.pin() {
+            session.login(UserType::User, Some(pin))?;
+        }
         Ok(session)
     }
 
