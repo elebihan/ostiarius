@@ -6,14 +6,15 @@
 
 use crate::http::ApiContext;
 use axum::{
-    extract::{Extension, Query},
+    extract::{Extension, Path, Query},
     http::StatusCode,
     response::IntoResponse,
     routing::get,
     Json, Router,
 };
-use ostiarius_core::{Error, Request};
+use ostiarius_core::{authorization, Authorization, Error, Request};
 use serde::Deserialize;
+use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Default)]
 struct Pagination {
@@ -36,23 +37,35 @@ async fn authorizations_index(
     Json(authorizations)
 }
 
+async fn authorizations_get(
+    Path(id): Path<Uuid>,
+    Extension(ctx): Extension<ApiContext>,
+) -> std::result::Result<Json<Authorization>, StatusCode> {
+    let authorizations = ctx.database.lock().await;
+    let authorization = authorizations.get(&id).ok_or(StatusCode::NOT_FOUND)?;
+    Ok(Json(authorization.clone()))
+}
+
 async fn authorizations_create(
     Json(request): Json<Request>,
     Extension(ctx): Extension<ApiContext>,
-) -> impl IntoResponse {
+) -> std::result::Result<impl IntoResponse, StatusCode> {
     let authorization = match ctx.checker.check(&request) {
-        Err(ref e) if matches!(e, Error::Unauthorized) => return StatusCode::FORBIDDEN,
-        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR,
+        Err(ref e) if matches!(e, Error::Unauthorized) => return Err(StatusCode::FORBIDDEN),
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
         Ok(a) => a,
     };
+    let id = authorization.id;
     let mut authorizations = ctx.database.lock().await;
     authorizations.insert(authorization.id, authorization);
-    StatusCode::CREATED
+    Ok((StatusCode::CREATED, Json(id)))
 }
 
 pub fn router() -> Router {
-    Router::new().route(
-        "/api/v1/authorizations",
-        get(authorizations_index).post(authorizations_create),
-    )
+    Router::new()
+        .route(
+            "/api/v1/authorizations",
+            get(authorizations_index).post(authorizations_create),
+        )
+        .route("/api/v1/authorizations/:id", get(authorizations_get))
 }

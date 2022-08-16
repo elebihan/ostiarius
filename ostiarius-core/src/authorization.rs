@@ -8,7 +8,7 @@ use crate::{Error, PrivateKey, Result, RsaPrivateKey};
 use chrono::{DateTime, Utc};
 use openssl::{
     base64,
-    pkey::Public,
+    pkey::{Private, Public},
     rsa::{Padding, Rsa},
 };
 use rand::prelude::*;
@@ -27,18 +27,25 @@ pub struct Request {
 #[derive(Debug)]
 pub struct Requester {
     checker_pub_key: Rsa<Public>,
+    priv_key: Rsa<Private>,
     token: [u8; 32],
 }
 
 impl Requester {
-    pub fn new<P: AsRef<Path>>(checker_pub_key_path: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>, Q: AsRef<Path>>(
+        checker_pub_key_path: P,
+        requester_priv_key_path: Q,
+    ) -> Result<Self> {
         let checker_pub_key = std::fs::read(checker_pub_key_path)?;
         let checker_pub_key = Rsa::public_key_from_pem(&checker_pub_key)?;
         let mut rng = rand::thread_rng();
         let mut token = [0u8; 32];
         rng.fill(&mut token);
+        let priv_key =
+            std::fs::read(requester_priv_key_path).map(|v| Rsa::private_key_from_pem(&v))??;
         let requester = Requester {
             checker_pub_key,
+            priv_key,
             token,
         };
         Ok(requester)
@@ -59,6 +66,15 @@ impl Requester {
             .checker_pub_key
             .public_encrypt(&self.token, &mut challenge, Padding::PKCS1)?;
         Ok(base64::encode_block(&challenge))
+    }
+
+    pub fn check(&self, authorization: &Authorization) -> Result<bool> {
+        let token = base64::decode_block(&authorization.token)?;
+        let mut challenge: Vec<u8> = vec![0; self.priv_key.size() as usize];
+        let size = self
+            .priv_key
+            .private_decrypt(&token, &mut challenge, Padding::PKCS1)?;
+        Ok(challenge[..size] == self.token)
     }
 }
 
@@ -92,7 +108,7 @@ pub struct Checker {
     priv_key: RsaPrivateKey,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Authorization {
     pub id: Uuid,
     pub timestamp: DateTime<Utc>,
@@ -155,8 +171,9 @@ mod tests {
 
     fn create_requester() -> Result<Requester> {
         let data_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "..", "tests"].iter().collect();
-        let path = data_dir.join("server.pubkey.pem");
-        Requester::new(path)
+        let server_pubkey_path = data_dir.join("server.pubkey.pem");
+        let privkey_path = data_dir.join("client1.privkey.pem");
+        Requester::new(server_pubkey_path, privkey_path)
     }
 
     #[test]

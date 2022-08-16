@@ -9,6 +9,7 @@ use gumdrop::Options;
 use hostname;
 use ostiarius_core::{Error, Requester};
 use reqwest::blocking;
+use uuid::Uuid;
 
 #[derive(Debug, Options)]
 struct ClientOptions {
@@ -18,6 +19,8 @@ struct ClientOptions {
     version: bool,
     #[options(help = "Set client name")]
     name: Option<String>,
+    #[options(help = "Path to client private key")]
+    priv_key: Option<String>,
     #[options(help = "Path to server public key")]
     server_pub_key: Option<String>,
     #[options(free)]
@@ -43,20 +46,34 @@ fn main() -> anyhow::Result<()> {
     let server_pubkey = options
         .server_pub_key
         .unwrap_or("server.pubkey.pem".to_string());
-    let requester = Requester::new(server_pubkey).context("failed to create requester")?;
+    let client_privkey = options.priv_key.unwrap_or("client.privkey.pem".to_string());
+    let requester =
+        Requester::new(server_pubkey, client_privkey).context("failed to create requester")?;
     let request = requester
         .make(&name, &options.command)
         .context("failed to make request")?;
     let client = blocking::Client::new();
     let url = format!("{}/api/v1/authorizations", options.url);
     let res = client
-        .post(url)
+        .post(&url)
         .json(&request)
         .send()
-        .context("failed to send request")?;
+        .context("failed to post authorization request")?;
     if !res.status().is_success() {
         eprintln!("Forbidden to execute command");
         std::process::exit(2);
+    }
+    let uuid = res.json::<Uuid>().context("failed to decode response")?;
+    let authorization = client
+        .get(format!("{}/{}", &url, &uuid))
+        .send()
+        .context("failed to get authorization")?;
+    let approved = requester
+        .check(&authorization.json()?)
+        .context("failed to check authorization")?;
+    if !approved {
+        eprintln!("Authorization mismatch");
+        std::process::exit(3);
     }
     let args = options
         .command
@@ -68,7 +85,7 @@ fn main() -> anyhow::Result<()> {
         .context("failed to execute command")?;
     if !status.success() {
         eprintln!("Command failed");
-        std::process::exit(3);
+        std::process::exit(4);
     }
     Ok(())
 }
