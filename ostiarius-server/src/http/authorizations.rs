@@ -12,7 +12,7 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use ostiarius_core::{authorization, Authorization, Error, Request};
+use ostiarius_core::{Authorization, Error, Request};
 use serde::Deserialize;
 use uuid::Uuid;
 
