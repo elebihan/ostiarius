@@ -85,6 +85,9 @@ Start client with name "Client 1" to check for the authorization to execute `ls 
 ostiarius-client --name "Client 1" http://192.168.1.10:3000 'ls /etc'
 ```
 
+The server can also use a private key stored in a PKCS#11 token. See
+[ostiarius-server/README.md](ostiarius-server/README.md) for details.
+
 # License
 
 Copyright (c) 2022 Eric Le Bihan
