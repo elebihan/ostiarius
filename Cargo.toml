@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "ostiarius-client",
+  "ostiarius-core",
+  "ostiarius-server",
+]

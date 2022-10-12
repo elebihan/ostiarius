@@ -1,0 +1,13 @@
+[package]
+name = "ostiarius-client"
+version = "0.2.0"
+authors = ["Eric Le Bihan <eric.le.bihan.dev@free.fr>"]
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.59"
+gumdrop = "0.8.1"
+hostname = "0.3.1"
+ostiarius-core = { path = "../ostiarius-core" }
+reqwest = { version = "0.11.11", default-features = false, features = ["blocking", "json"] }
+uuid = "1.1.2"
