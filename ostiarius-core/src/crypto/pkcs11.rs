@@ -67,6 +67,7 @@ impl Pkcs11Url {
         &self.module_path
     }
 
+    #[allow(dead_code)]
     pub fn token(&self) -> &str {
         &self.token
     }
