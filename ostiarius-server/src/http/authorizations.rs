@@ -57,6 +57,11 @@ async fn authorizations_create(
     };
     let id = authorization.id;
     let mut authorizations = ctx.database.lock().await;
+    tracing::info!(
+        "Granted authorization {} to client '{}'",
+        &id,
+        &authorization.name
+    );
     authorizations.insert(authorization.id, authorization);
     Ok((StatusCode::CREATED, Json(id)))
 }
