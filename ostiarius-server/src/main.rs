@@ -30,7 +30,7 @@ pub struct ServerOptions {
 async fn main() -> anyhow::Result<()> {
     let options = ServerOptions::parse_args_default_or_exit();
     if options.version {
-        println!("ostracius-server {}", env!("CARGO_PKG_VERSION"));
+        println!("ostiarius-server {}", env!("CARGO_PKG_VERSION"));
         std::process::exit(0);
     }
     let address = options
