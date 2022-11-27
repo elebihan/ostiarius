@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to parse IP address")?;
     let port = options.port.unwrap_or(3000);
     let mut path = std::env::current_dir().context("failed to get current directory")?;
-    path.push("server.pubkey.pem");
+    path.push("server.privkey.pem");
     let priv_key = options
         .priv_key
         .unwrap_or(format!("file://{}", path.display()));
