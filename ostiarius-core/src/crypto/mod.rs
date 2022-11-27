@@ -5,6 +5,7 @@
 //
 
 mod openssl;
+pub mod password;
 mod pkcs11;
 
 use crate::{

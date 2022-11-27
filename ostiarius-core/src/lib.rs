@@ -9,5 +9,5 @@ pub mod crypto;
 pub mod error;
 
 pub use crate::authorization::*;
-pub use crate::crypto::{PrivateKey, RsaPrivateKey};
+pub use crate::crypto::{password::PasswordProvider, PrivateKey, RsaPrivateKey};
 pub use crate::error::*;
