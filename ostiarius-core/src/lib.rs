@@ -7,6 +7,7 @@
 pub mod authorization;
 pub mod crypto;
 pub mod error;
+pub mod utils;
 
 pub use crate::authorization::*;
 pub use crate::crypto::{password::PasswordProvider, PrivateKey, RsaPrivateKey};

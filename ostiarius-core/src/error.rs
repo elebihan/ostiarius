@@ -16,6 +16,8 @@ pub enum Error {
     Io(#[from] std::io::Error),
     #[error("OpenSSL error: {0}")]
     OpenSsl(#[from] openssl::error::ErrorStack),
+    #[error("Integer parsing error: {0}")]
+    ParseInt(#[from] core::num::ParseIntError),
     #[error("TOML deserialization error: {0}")]
     Toml(#[from] toml::de::Error),
     #[error("URL parsing error: {0}")]
