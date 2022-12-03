@@ -6,7 +6,9 @@
 
 use anyhow::Context;
 use gumdrop::Options;
-use ostiarius_core::{Authorizations, Checker};
+use ostiarius_core::{
+    crypto::password::PasswordProvider, utils::insert_password, Authorizations, Checker,
+};
 use ostiarius_server::{config::Config, http, models};
 use std::net::IpAddr;
 
@@ -24,6 +26,13 @@ pub struct ServerOptions {
     pub authorizations: Option<String>,
     #[options(help = "URI of server private key", meta = "URI")]
     priv_key: Option<String>,
+    #[options(
+        help = "Password provider",
+        meta = "PROVIDER",
+        long = "password",
+        short = "S"
+    )]
+    password_provider: Option<String>,
 }
 
 #[tokio::main]
@@ -44,6 +53,14 @@ async fn main() -> anyhow::Result<()> {
     let priv_key = options
         .priv_key
         .unwrap_or(format!("file://{}", path.display()));
+    let password_provider = match options.password_provider {
+        Some(provider) => provider.parse()?,
+        None => PasswordProvider::Prompt,
+    };
+    let password = password_provider
+        .provide()
+        .context("failed to get password")?;
+    let priv_key = insert_password(&password, &priv_key)?;
     let authorizations = options
         .authorizations
         .unwrap_or("authorizations.toml".to_string());
