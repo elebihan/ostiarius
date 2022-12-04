@@ -10,19 +10,30 @@ reception, if the request can be properly decrypted, the server will check in
 the ``authorizations.toml`` file if the client is authorized to execute the
 command and send the response back, encrypted with the client public key.
 
-The private key of the server can be stored in a PEM file or in a PKCS#11 token
-and passed to server via an URL.
+The private key of the server can be stored in a password-protected PEM file or
+in a PKCS#11 token and passed to server via an URL.
 
 ## Usage examples
 
 ### Start server with private key in file
 
 Assuming the private key is available as a file named
-``/etc/ostiarius-server.d/server.privkey.pem``, the server can be started using:
+``/etc/ostiarius-server.d/server.privkey.pem``, protected with password "1234",
+the server can be started using:
 
 ```sh
 ostiarius-server -P "file:///etc/ostiarius-server.d/server.privkey.pem"
 ```
+
+A prompt will appear to enter the password of the private key file. The password
+can also be provided using the ``--password`` option:
+
+- ``--password=file:password.txt``, if the password is stored in file
+  ``password.txt``.
+- ``--password=env:PASSWORD``, if the password is the value of the environment
+  variable ``PASSWORD``.
+- ``--password=fd:N`` if the password can be read from file descriptor ``N``,
+  opened by another program.
 
 ### Start server with private key in PKCS#11 token
 
@@ -31,8 +42,11 @@ Assuming the private key is available in a PKCS#11 token named "Ostiarius Token
 is "1234", the server can be started using:
 
 ```sh
-ostiarius-server -P "pkcs11:token=Ostiarius%20Token%2001;pin-value=1234;object=Ostiarius%20Server%20Key%2001?module-path=/usr/lib64/libsofthsm2.so"
+ostiarius-server -P "pkcs11:token=Ostiarius%20Token%2001;object=Ostiarius%20Server%20Key%2001?module-path=/usr/lib64/libsofthsm2.so"
 ```
+
+A prompt will appear to enter the PIN for the PKCS#11 token. As mentioned above,
+the PIN can also be provided by the ``--password`` option.
 
 ### Get server info
 
