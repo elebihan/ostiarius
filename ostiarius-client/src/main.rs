@@ -32,7 +32,7 @@ struct ClientOptions {
 fn main() -> anyhow::Result<()> {
     let options = ClientOptions::parse_args_default_or_exit();
     if options.version {
-        println!("ostracius-client {}", env!("CARGO_PKG_VERSION"));
+        println!("ostiarius-client {}", env!("CARGO_PKG_VERSION"));
         std::process::exit(0);
     }
     let name = match options.name {

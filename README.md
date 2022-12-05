@@ -65,11 +65,14 @@ To run, the client needs:
 All the keys can be generated using:
 
 ```sh
-openssl genrsa -out server.privkey.pem  4096
+openssl genrsa -aes256 -out server.privkey.pem  4096
 openssl rsa -in server.privkey.pem -pubout -out server.pubkey.pem
 openssl genrsa -out client.privkey.pem 4096
 openssl rsa -in client.privkey.pem -pubout -out client.pubkey.pem
 ```
+
+Do not forget to store the password of the private key somewhere safe, as it
+will be used when running the programs.
 
 # Usage example
 

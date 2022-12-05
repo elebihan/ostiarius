@@ -5,6 +5,7 @@
 //
 
 mod openssl;
+pub mod password;
 mod pkcs11;
 
 use crate::{
@@ -29,7 +30,7 @@ impl RsaPrivateKey {
         let url = Url::parse(uri)?;
         let key = match url.scheme() {
             "file" => {
-                let key = FileRsaPrivateKey::from_pem_file(url.path())?;
+                let key = FileRsaPrivateKey::new(&url)?;
                 RsaPrivateKey::File(key)
             }
             "pkcs11" => {

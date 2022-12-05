@@ -15,6 +15,8 @@ use ostiarius_core::Checker;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Clone)]
 struct ApiContext {
@@ -23,6 +25,13 @@ struct ApiContext {
 }
 
 pub async fn serve(config: Config, database: models::Database) -> anyhow::Result<()> {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG")
+                .unwrap_or_else(|_| "ostiarius_server=info,tower_http=info".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
     let addr = SocketAddr::new(config.address, config.port);
     let api_context = ApiContext {
         checker: Arc::new(config.checker),
@@ -32,7 +41,8 @@ pub async fn serve(config: Config, database: models::Database) -> anyhow::Result
     let app = Router::new()
         .merge(index::router())
         .merge(authorizations::router())
-        .layer(service);
+        .layer(service)
+        .layer(TraceLayer::new_for_http());
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
