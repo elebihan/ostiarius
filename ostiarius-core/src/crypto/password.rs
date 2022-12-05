@@ -13,6 +13,7 @@ pub enum PasswordProvider {
     #[cfg(unix)]
     Fd(u8),
     File(PathBuf),
+    #[cfg(feature = "visible_password")]
     Pass(String),
     Prompt,
 }
@@ -35,6 +36,7 @@ impl std::str::FromStr for PasswordProvider {
                 PasswordProvider::File(path)
             }
             "env" => PasswordProvider::Env(fields[1].to_string()),
+            #[cfg(feature = "visible_password")]
             "pass" => PasswordProvider::Pass(fields[1].to_string()),
             _ => PasswordProvider::Prompt,
         };
@@ -54,6 +56,7 @@ impl PasswordProvider {
                 password
             }
             PasswordProvider::File(path) => std::fs::read_to_string(path)?,
+            #[cfg(feature = "visible_password")]
             PasswordProvider::Pass(value) => value.to_string(),
             PasswordProvider::Prompt => rpassword::prompt_password("Please enter password: ")?,
         };

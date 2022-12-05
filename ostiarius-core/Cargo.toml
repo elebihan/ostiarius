@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 description = "Ostiarius core functions"
 
+[features]
+visible_password = []
+
 [dependencies]
 chrono = { version = "0.4.19", features = ["serde"] }
 cryptoki = "0.3.0"
