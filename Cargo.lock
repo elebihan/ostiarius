@@ -660,7 +660,7 @@ dependencies = [
 
 [[package]]
 name = "ostiarius-client"
-version = "0.4.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "gumdrop",
@@ -672,7 +672,7 @@ dependencies = [
 
 [[package]]
 name = "ostiarius-core"
-version = "0.4.0"
+version = "0.5.1"
 dependencies = [
  "chrono",
  "cryptoki",
@@ -689,7 +689,7 @@ dependencies = [
 
 [[package]]
 name = "ostiarius-server"
-version = "0.4.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "axum",
