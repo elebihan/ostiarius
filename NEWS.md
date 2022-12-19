@@ -1,5 +1,10 @@
 # What's New?
 
+## [0.4.2] - 2022-12-19
+### Fixed
+
+- core: fix build for MS Windows
+
 ## [0.4.0] - 2022-12-05
 ### Added
 
