@@ -6,7 +6,9 @@
 
 use crate::{Error, Result};
 use rpassword;
-use std::{io::Read, os::unix::prelude::FromRawFd, path::PathBuf};
+use std::path::PathBuf;
+#[cfg(unix)]
+use std::{io::Read, os::unix::prelude::FromRawFd};
 
 pub enum PasswordProvider {
     Env(String),
