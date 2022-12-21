@@ -1,6 +1,11 @@
 # What's New?
 
-## 0.4.0 [2022-12-05]
+## [0.4.2] - 2022-12-19
+### Fixed
+
+- core: fix build for MS Windows
+
+## [0.4.0] - 2022-12-05
 ### Added
 
 - core: add password provider.
@@ -16,7 +21,7 @@
 - client, server: fix typo in program name.
 - server: fix private key default value.
 
-## 0.2.0 [2022-10-12]
+## [0.2.0] - 2022-10-12
 ### Added
 
 - Initial version
