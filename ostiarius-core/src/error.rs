@@ -36,6 +36,8 @@ pub enum Error {
     InvalidKey(String),
     #[error("Invalid provider: {0}")]
     InvalidProvider(String),
+    #[error("Invalid UTF-8: {0}")]
+    Utf8(#[from] core::str::Utf8Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

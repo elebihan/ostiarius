@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::{crypto::PrivateKey, Error, Result};
+use crate::{crypto::PrivateKey, utils::unescape_password, Error, Result};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
     mechanism::Mechanism,
@@ -98,7 +98,8 @@ impl TryFrom<&Url> for Pkcs11Url {
             pin: params
                 .0
                 .remove("pin-value")
-                .ok_or(Error::InvalidUri("missing pin-value".to_string()))?,
+                .ok_or(Error::InvalidUri("missing pin-value".to_string()))
+                .and_then(|p| unescape_password(&p))?,
             object: params
                 .0
                 .remove("object")

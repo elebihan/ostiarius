@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::{crypto::PrivateKey, Result};
+use crate::{crypto::PrivateKey, utils::unescape_password, Result};
 use openssl::{
     pkey::Private,
     rsa::{Padding, Rsa},
@@ -23,7 +23,10 @@ impl FileRsaPrivateKey {
             .find_map(|(k, v)| if k == "password" { Some(v) } else { None });
         let priv_key: Vec<u8> = std::fs::read(url.path())?;
         let inner = match password {
-            Some(password) => Rsa::private_key_from_pem_passphrase(&priv_key, password.as_bytes())?,
+            Some(password) => {
+                let password = unescape_password(&password)?;
+                Rsa::private_key_from_pem_passphrase(&priv_key, password.as_bytes())?
+            }
             None => Rsa::private_key_from_pem(&priv_key)?,
         };
         Ok(FileRsaPrivateKey { inner })
