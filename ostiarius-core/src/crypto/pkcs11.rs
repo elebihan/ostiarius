@@ -38,6 +38,11 @@ impl TryFrom<&Url> for Pkcs11Params {
 
     fn try_from(url: &Url) -> std::result::Result<Self, Self::Error> {
         let mut params = url.path().parse::<Pkcs11Params>()?;
+        let encoded_pass = params.0.get("pin-value").ok_or("Error: Can't get pin-value in Pkcs11Params hash map").unwrap().as_bytes();
+        let decoded_pass = percent_encoding::percent_decode(encoded_pass).decode_utf8_lossy().to_string();
+        params.0.entry(String::from("pin-value")).and_modify(|new_pass| {
+            *new_pass = decoded_pass;
+        });
         let module_path = url
             .query_pairs()
             .filter_map(|(k, v)| {
@@ -188,6 +193,8 @@ mod tests {
         "pkcs11:token=Ostiarius%20Token%2001;pin-value=1234?module-path=/usr/lib64/libsofthsm2.so";
     const INVALID_URL_NO_MODULE_PATH: &'static str =
         "pkcs11:token=Ostiarius%20Token%2001;pin-value=1234;object=Ostiarius%20Server%20Key%2001";
+    const VALID_URL_ENCODED_PASSWD: &'static str =
+        "pkcs11:token=RepairOS EOLE key;object=RepairOS EOLE key;pin-value=%20%3C%3E%23%25%2B%7B%7D%7C%5C%5E%7E%5B%5D%60%3B%2F%3F%3A%40%3D%26%24?module-path=/usr/lib/libeTPkcs11.so";
 
     #[test]
     pub fn invalid_url_no_object() {
@@ -201,5 +208,13 @@ mod tests {
         let url = url::Url::parse(INVALID_URL_NO_MODULE_PATH).unwrap();
         let result = Pkcs11RsaPrivateKey::new(&url);
         assert!(matches!(result, Err(crate::error::Error::InvalidUri(_))));
+    }
+
+    #[test]
+    fn pkcs11url_tryfrom_decode_passwd(){
+        let url = Url::parse(VALID_URL_ENCODED_PASSWD).unwrap();
+        let pkcs11url = Pkcs11Url::try_from(&url).unwrap();
+        let expected_decoded_passwd = " <>#%+{}|\\^~[]`;/?:@=&$";
+        assert_eq!(pkcs11url.pin(), expected_decoded_passwd);
     }
 }
