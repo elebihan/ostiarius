@@ -38,11 +38,6 @@ impl TryFrom<&Url> for Pkcs11Params {
 
     fn try_from(url: &Url) -> std::result::Result<Self, Self::Error> {
         let mut params = url.path().parse::<Pkcs11Params>()?;
-        let encoded_pass = params.0.get("pin-value").ok_or("Error: Can't get pin-value in Pkcs11Params hash map").unwrap().as_bytes();
-        let decoded_pass = percent_encoding::percent_decode(encoded_pass).decode_utf8_lossy().to_string();
-        params.0.entry(String::from("pin-value")).and_modify(|new_pass| {
-            *new_pass = decoded_pass;
-        });
         let module_path = url
             .query_pairs()
             .filter_map(|(k, v)| {
@@ -91,6 +86,11 @@ impl TryFrom<&Url> for Pkcs11Url {
 
     fn try_from(url: &Url) -> std::result::Result<Self, Self::Error> {
         let mut params = Pkcs11Params::try_from(url)?;
+        let encoded_pass = params.0.get("pin-value").ok_or(Error::InvalidUri("Can't get pin-value in Pkcs11Params hash map".to_string())).unwrap().as_bytes();
+        let decoded_pass = percent_encoding::percent_decode(encoded_pass).decode_utf8_lossy().to_string();
+        params.0.entry(String::from("pin-value")).and_modify(|new_pass| {
+            *new_pass = decoded_pass;
+        });
         Ok(Pkcs11Url {
             module_path: params
                 .0
