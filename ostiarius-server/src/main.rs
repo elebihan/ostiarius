@@ -60,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
     let password = password_provider
         .provide()
         .context("failed to get password")?;
-    let priv_key = insert_password(&password, &priv_key)?;
+    let priv_key = insert_password(&mut password.as_str(), &priv_key)?;
     let authorizations = options
         .authorizations
         .unwrap_or("authorizations.toml".to_string());
