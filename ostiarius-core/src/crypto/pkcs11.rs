@@ -21,12 +21,12 @@ struct Pkcs11Params(HashMap<String, String>);
 impl FromStr for Pkcs11Params {
     type Err = Error;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let items = s.split(";");
+        let items = s.split(';');
         let result: std::result::Result<HashMap<String, String>, Self::Err> = items
             .map(|kv| {
-                kv.find("=")
+                kv.find('=')
                     .ok_or(Error::InvalidUri("malformed parameter".to_string()))
-                    .and_then(move |p| Ok((kv[0..p].to_string(), kv[p + 1..].replace("%20", " "))))
+                    .map(move |p| (kv[0..p].to_string(), kv[p + 1..].replace("%20", " ")))
             })
             .collect();
         Ok(Pkcs11Params(result?))
@@ -86,11 +86,6 @@ impl TryFrom<&Url> for Pkcs11Url {
 
     fn try_from(url: &Url) -> std::result::Result<Self, Self::Error> {
         let mut params = Pkcs11Params::try_from(url)?;
-        let encoded_pass = params.0.get("pin-value").ok_or(Error::InvalidUri("Can't get pin-value in Pkcs11Params hash map".to_string())).unwrap().as_bytes();
-        let decoded_pass = percent_encoding::percent_decode(encoded_pass).decode_utf8_lossy().to_string();
-        params.0.entry(String::from("pin-value")).and_modify(|new_pass| {
-            *new_pass = decoded_pass;
-        });
         Ok(Pkcs11Url {
             module_path: params
                 .0
@@ -100,10 +95,11 @@ impl TryFrom<&Url> for Pkcs11Url {
                 .0
                 .remove("token")
                 .ok_or(Error::InvalidUri("missing token".to_string()))?,
-            pin: params
+            pin: percent_encoding::percent_decode(params
                 .0
                 .remove("pin-value")
-                .ok_or(Error::InvalidUri("missing pin-value".to_string()))?,
+                .ok_or(Error::InvalidUri("missing pin-value".to_string()))?
+                .as_bytes()).decode_utf8_lossy().to_string(),
             object: params
                 .0
                 .remove("object")
@@ -130,7 +126,7 @@ impl Pkcs11RsaPrivateKey {
 
     fn open_session(pkcs11: &Pkcs11, url: &Pkcs11Url) -> Result<Session> {
         let slots = pkcs11.get_slots_with_initialized_token()?;
-        if slots.len() == 0 {
+        if slots.is_empty() {
             return Err(Error::InvalidKey("No PKCS#11 token found".to_string()));
         }
 
@@ -150,7 +146,7 @@ impl Pkcs11RsaPrivateKey {
             Attribute::Sign(true),
         ];
         let keys = session.find_objects(&key_template)?;
-        if keys.len() == 0 {
+        if keys.is_empty() {
             return Err(Error::InvalidKey("No such PKCS#11 key".to_string()));
         }
         Ok((session, keys[0]))
@@ -160,7 +156,7 @@ impl Pkcs11RsaPrivateKey {
         let (session, key) = Self::acquire(pkcs11, url)?;
         let attr_types = vec![AttributeType::Modulus];
         let attrs = session.get_attributes(key, &attr_types)?;
-        if attrs.len() == 0 {
+        if attrs.is_empty() {
             return Err(Error::InvalidKey("No modulus".to_string()));
         }
         if let Attribute::Modulus(modulus) = &attrs[0] {
