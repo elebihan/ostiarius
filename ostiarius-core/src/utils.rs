@@ -7,21 +7,21 @@
 use crate::{Error, Result};
 use percent_encoding::NON_ALPHANUMERIC;
 
-pub fn insert_password(password: &mut &str, url: &str) -> Result<String> {
-    let (scheme, components) = url.split_once(":").ok_or(Error::InvalidUri(url.into()))?;
-    let password = percent_encoding::percent_encode(strip_trailing_newline(&mut password.to_string()).as_bytes(), NON_ALPHANUMERIC).to_string();
+pub fn insert_password(password: &str, url: &str) -> Result<String> {
+    let (scheme, components) = url.split_once(':').ok_or(Error::InvalidUri(url.into()))?;
+    let password = percent_encoding::percent_encode(password.as_bytes(), NON_ALPHANUMERIC).to_string();
     let u = match scheme {
         "file" => {
-            let parts = url.split_once("?");
+            let parts = url.split_once('?');
             let head = parts.map(|(h, _)| h).unwrap_or(url);
             [head, "?password=", &password].join("")
         }
         "pkcs11" => {
             let (old_params, module) = components
-                .split_once("?")
+                .split_once('?')
                 .ok_or(Error::InvalidUri(url.into()))?;
             let new_params = old_params
-                .split(";")
+                .split(';')
                 .filter(|p| !p.starts_with("pin-value="))
                 .flat_map(|p| [p, ";"]);
             let mut fields = vec!["pkcs11:"];
@@ -34,7 +34,7 @@ pub fn insert_password(password: &mut &str, url: &str) -> Result<String> {
         }
         _ => return Err(Error::InvalidUri(url.into())),
     };
-    Ok(String::from(u))
+    Ok(u)
 }
 
 pub fn strip_trailing_newline(input: &mut String) -> &mut String{
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_insert_password() {
-        let mut psswd = " <>#%+{}|\\^~[]`;/?:@=&$\n\r\n\r\r\n";
+        let mut psswd = " <>#%+{}|\\^~[]`;/?:@=&$";
         let url = "pkcs11:token=RepairOS EOLE key;object=RepairOS EOLE key?module-path=/usr/lib/libeTPkcs11.so";
         let test = insert_password(&mut psswd, url).unwrap();
         assert_eq!(test, "pkcs11:token=RepairOS EOLE key;object=RepairOS EOLE key;pin-value=%20%3C%3E%23%25%2B%7B%7D%7C%5C%5E%7E%5B%5D%60%3B%2F%3F%3A%40%3D%26%24?module-path=/usr/lib/libeTPkcs11.so");
