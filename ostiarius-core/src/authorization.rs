@@ -128,20 +128,19 @@ impl Checker {
     }
 
     pub fn check(&self, request: &Request) -> Result<Authorization> {
-        let data = base64::decode_block(&&request.challenge)?;
-        let mut challenge: Vec<u8> = vec![0; self.priv_key.size() as usize];
+        let data = base64::decode_block(&request.challenge)?;
+        let mut challenge: Vec<u8> = vec![0; self.priv_key.size()];
         let size = self.priv_key.decrypt(&data, &mut challenge)?;
         let client = self
             .authorizations
             .clients()
             .iter()
-            .filter(|client| {
+            .find(|client| {
                 client.name == request.name
                     && client.commands.iter().any(|cmd| cmd == &request.command)
             })
-            .next()
             .ok_or(Error::Unauthorized)?;
-        let pub_key: Rsa<Public> = Rsa::public_key_from_pem(&client.pub_key.as_bytes())?;
+        let pub_key: Rsa<Public> = Rsa::public_key_from_pem(client.pub_key.as_bytes())?;
         let mut token: Vec<u8> = vec![0; pub_key.size() as usize];
         let _size = pub_key.public_encrypt(&challenge[0..size], &mut token, Padding::PKCS1)?;
         let authorization = Authorization {
