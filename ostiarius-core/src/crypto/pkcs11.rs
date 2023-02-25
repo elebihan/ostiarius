@@ -95,11 +95,15 @@ impl TryFrom<&Url> for Pkcs11Url {
                 .0
                 .remove("token")
                 .ok_or(Error::InvalidUri("missing token".to_string()))?,
-            pin: percent_encoding::percent_decode(params
-                .0
-                .remove("pin-value")
-                .ok_or(Error::InvalidUri("missing pin-value".to_string()))?
-                .as_bytes()).decode_utf8_lossy().to_string(),
+            pin: percent_encoding::percent_decode(
+                params
+                    .0
+                    .remove("pin-value")
+                    .ok_or(Error::InvalidUri("missing pin-value".to_string()))?
+                    .as_bytes(),
+            )
+            .decode_utf8_lossy()
+            .to_string(),
             object: params
                 .0
                 .remove("object")
@@ -207,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn pkcs11url_tryfrom_decode_passwd(){
+    fn pkcs11url_tryfrom_decode_passwd() {
         let url = Url::parse(VALID_URL_ENCODED_PASSWD).unwrap();
         let pkcs11url = Pkcs11Url::try_from(&url).unwrap();
         let expected_decoded_passwd = " <>#%+{}|\\^~[]`;/?:@=&$";

@@ -6,12 +6,12 @@
 
 use anyhow::Context;
 use gumdrop::Options;
+use ostiarius_core::utils::strip_trailing_newline;
 use ostiarius_core::{
     crypto::password::PasswordProvider, utils::insert_password, Authorizations, Checker,
 };
 use ostiarius_server::{config::Config, http, models};
 use std::net::IpAddr;
-use ostiarius_core::utils::strip_trailing_newline;
 
 #[derive(Debug, Options)]
 pub struct ServerOptions {

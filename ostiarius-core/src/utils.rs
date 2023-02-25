@@ -9,7 +9,8 @@ use percent_encoding::NON_ALPHANUMERIC;
 
 pub fn insert_password(password: &str, url: &str) -> Result<String> {
     let (scheme, components) = url.split_once(':').ok_or(Error::InvalidUri(url.into()))?;
-    let password = percent_encoding::percent_encode(password.as_bytes(), NON_ALPHANUMERIC).to_string();
+    let password =
+        percent_encoding::percent_encode(password.as_bytes(), NON_ALPHANUMERIC).to_string();
     let u = match scheme {
         "file" => {
             let parts = url.split_once('?');
@@ -37,7 +38,7 @@ pub fn insert_password(password: &str, url: &str) -> Result<String> {
     Ok(u)
 }
 
-pub fn strip_trailing_newline(input: &mut String) -> &mut String{
+pub fn strip_trailing_newline(input: &mut String) -> &mut String {
     let new_len = input
         .char_indices()
         .rev()
@@ -90,5 +91,5 @@ mod tests {
         let mut s = "".to_string();
         strip_trailing_newline(&mut s);
         assert_eq!(s, "");
-        }
+    }
 }

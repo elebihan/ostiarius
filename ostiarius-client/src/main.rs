@@ -45,7 +45,9 @@ fn main() -> anyhow::Result<()> {
     let server_pubkey = options
         .server_pub_key
         .unwrap_or_else(|| "server.pubkey.pem".to_string());
-    let client_privkey = options.priv_key.unwrap_or_else(|| "client.privkey.pem".to_string());
+    let client_privkey = options
+        .priv_key
+        .unwrap_or_else(|| "client.privkey.pem".to_string());
     let requester =
         Requester::new(server_pubkey, client_privkey).context("failed to create requester")?;
     let request = requester
