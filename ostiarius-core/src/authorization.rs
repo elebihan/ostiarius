@@ -164,7 +164,7 @@ mod tests {
         let path = data_dir.join("authorizations.toml");
         let authorizations = Authorizations::from_file(path)?;
         let path = data_dir.join("server.privkey.pem");
-        let uri = format!("file://{}", path.display());
+        let uri = format!("file://{}?password=1234", path.display());
         Checker::new(&uri, authorizations)
     }
 
