@@ -6,7 +6,6 @@
 
 use anyhow::Context;
 use gumdrop::Options;
-use ostiarius_core::utils::strip_trailing_newline;
 use ostiarius_core::{
     crypto::password::PasswordProvider, utils::insert_password, Authorizations, Checker,
 };
@@ -58,10 +57,9 @@ async fn main() -> anyhow::Result<()> {
         Some(provider) => provider.parse()?,
         None => PasswordProvider::Prompt,
     };
-    let mut password = password_provider
+    let password = password_provider
         .provide()
         .context("failed to get password")?;
-    strip_trailing_newline(&mut password);
     let priv_key = insert_password(&password, &priv_key)?;
     let authorizations = options
         .authorizations
