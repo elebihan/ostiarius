@@ -151,5 +151,22 @@ Object 0:
  	ID: 3a:0c:34:20:ff:58:fe:6c:b6:32:95:18:02:5d:42:3c:e8:83:ca:e9
 ```
 
+The password can also contains special characters:
+
+```sh
+
+softhsm2-util --init-token --free --label "Ostiarius Token 02" --so-pin "0000" --pin ' <>#%+{}|\\^~[]`;/?:@=&$'
+```
+
+```sh
+p11tool --login --set-pin ' <>#%+{}|\\^~[]`;/?:@=&$' \
+        --load-privkey=tests/server.privkey.pem \
+        --label 'Ostiarius Server Key 02' \
+        --mark-sign \
+        --mark-decrypt \
+        --write \
+        pkcs11:token=Ostiarius%20Token%2002
+```
+
 [SOFTHSM]: https://www.opendnssec.org/softhsm/
 [P11KIT]: https://p11-glue.github.io/p11-glue/p11-kit.html

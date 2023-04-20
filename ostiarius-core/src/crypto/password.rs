@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::{Error, Result};
+use crate::{utils::strip_trailing_newline, Error, Result};
 use rpassword;
 use std::path::PathBuf;
 #[cfg(unix)]
@@ -48,7 +48,7 @@ impl std::str::FromStr for PasswordProvider {
 
 impl PasswordProvider {
     pub fn provide(&self) -> Result<String> {
-        let password = match self {
+        let mut password = match self {
             PasswordProvider::Env(var) => std::env::var(var)?,
             #[cfg(unix)]
             PasswordProvider::Fd(fd) => {
@@ -62,6 +62,7 @@ impl PasswordProvider {
             PasswordProvider::Pass(value) => value.to_string(),
             PasswordProvider::Prompt => rpassword::prompt_password("Please enter password: ")?,
         };
+        strip_trailing_newline(&mut password);
         Ok(password)
     }
 }

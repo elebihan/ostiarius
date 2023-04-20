@@ -44,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
     }
     let address = options
         .address
-        .unwrap_or("127.0.0.1".to_string())
+        .unwrap_or_else(|| "127.0.0.1".to_string())
         .parse::<IpAddr>()
         .context("Failed to parse IP address")?;
     let port = options.port.unwrap_or(3000);
@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
     let priv_key = insert_password(&password, &priv_key)?;
     let authorizations = options
         .authorizations
-        .unwrap_or("authorizations.toml".to_string());
+        .unwrap_or_else(|| "authorizations.toml".to_string());
     let authorizations =
         Authorizations::from_file(authorizations).context("failed to load authorizations")?;
     let checker = Checker::new(&priv_key, authorizations).context("failed to create checker")?;

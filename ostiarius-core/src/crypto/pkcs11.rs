@@ -21,12 +21,12 @@ struct Pkcs11Params(HashMap<String, String>);
 impl FromStr for Pkcs11Params {
     type Err = Error;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let items = s.split(";");
+        let items = s.split(';');
         let result: std::result::Result<HashMap<String, String>, Self::Err> = items
             .map(|kv| {
-                kv.find("=")
+                kv.find('=')
                     .ok_or(Error::InvalidUri("malformed parameter".to_string()))
-                    .and_then(move |p| Ok((kv[0..p].to_string(), kv[p + 1..].replace("%20", " "))))
+                    .map(move |p| (kv[0..p].to_string(), kv[p + 1..].replace("%20", " ")))
             })
             .collect();
         Ok(Pkcs11Params(result?))
@@ -95,10 +95,15 @@ impl TryFrom<&Url> for Pkcs11Url {
                 .0
                 .remove("token")
                 .ok_or(Error::InvalidUri("missing token".to_string()))?,
-            pin: params
-                .0
-                .remove("pin-value")
-                .ok_or(Error::InvalidUri("missing pin-value".to_string()))?,
+            pin: percent_encoding::percent_decode(
+                params
+                    .0
+                    .remove("pin-value")
+                    .ok_or(Error::InvalidUri("missing pin-value".to_string()))?
+                    .as_bytes(),
+            )
+            .decode_utf8_lossy()
+            .to_string(),
             object: params
                 .0
                 .remove("object")
@@ -125,7 +130,7 @@ impl Pkcs11RsaPrivateKey {
 
     fn open_session(pkcs11: &Pkcs11, url: &Pkcs11Url) -> Result<Session> {
         let slots = pkcs11.get_slots_with_initialized_token()?;
-        if slots.len() == 0 {
+        if slots.is_empty() {
             return Err(Error::InvalidKey("No PKCS#11 token found".to_string()));
         }
 
@@ -145,7 +150,7 @@ impl Pkcs11RsaPrivateKey {
             Attribute::Sign(true),
         ];
         let keys = session.find_objects(&key_template)?;
-        if keys.len() == 0 {
+        if keys.is_empty() {
             return Err(Error::InvalidKey("No such PKCS#11 key".to_string()));
         }
         Ok((session, keys[0]))
@@ -155,7 +160,7 @@ impl Pkcs11RsaPrivateKey {
         let (session, key) = Self::acquire(pkcs11, url)?;
         let attr_types = vec![AttributeType::Modulus];
         let attrs = session.get_attributes(key, &attr_types)?;
-        if attrs.len() == 0 {
+        if attrs.is_empty() {
             return Err(Error::InvalidKey("No modulus".to_string()));
         }
         if let Attribute::Modulus(modulus) = &attrs[0] {
@@ -184,10 +189,12 @@ impl PrivateKey for Pkcs11RsaPrivateKey {
 mod tests {
     use super::*;
 
-    const INVALID_URL_NO_OBJECT: &'static str =
+    const INVALID_URL_NO_OBJECT: &str =
         "pkcs11:token=Ostiarius%20Token%2001;pin-value=1234?module-path=/usr/lib64/libsofthsm2.so";
-    const INVALID_URL_NO_MODULE_PATH: &'static str =
+    const INVALID_URL_NO_MODULE_PATH: &str =
         "pkcs11:token=Ostiarius%20Token%2001;pin-value=1234;object=Ostiarius%20Server%20Key%2001";
+    const VALID_URL_ENCODED_PASSWD: &str =
+        "pkcs11:token=Ostiarius%20Token%2002;object=Ostiarius%20Server%20key%2002;pin-value=%20%3C%3E%23%25%2B%7B%7D%7C%5C%5E%7E%5B%5D%60%3B%2F%3F%3A%40%3D%26%24?module-path=/usr/lib64/libsofthsm2.so";
 
     #[test]
     pub fn invalid_url_no_object() {
@@ -201,5 +208,13 @@ mod tests {
         let url = url::Url::parse(INVALID_URL_NO_MODULE_PATH).unwrap();
         let result = Pkcs11RsaPrivateKey::new(&url);
         assert!(matches!(result, Err(crate::error::Error::InvalidUri(_))));
+    }
+
+    #[test]
+    fn pkcs11url_tryfrom_decode_passwd() {
+        let url = Url::parse(VALID_URL_ENCODED_PASSWD).unwrap();
+        let pkcs11url = Pkcs11Url::try_from(&url).unwrap();
+        let expected_decoded_passwd = " <>#%+{}|\\^~[]`;/?:@=&$";
+        assert_eq!(pkcs11url.pin(), expected_decoded_passwd);
     }
 }
