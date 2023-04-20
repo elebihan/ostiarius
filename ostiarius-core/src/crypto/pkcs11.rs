@@ -189,11 +189,11 @@ impl PrivateKey for Pkcs11RsaPrivateKey {
 mod tests {
     use super::*;
 
-    const INVALID_URL_NO_OBJECT: &'static str =
+    const INVALID_URL_NO_OBJECT: &str =
         "pkcs11:token=Ostiarius%20Token%2001;pin-value=1234?module-path=/usr/lib64/libsofthsm2.so";
-    const INVALID_URL_NO_MODULE_PATH: &'static str =
+    const INVALID_URL_NO_MODULE_PATH: &str =
         "pkcs11:token=Ostiarius%20Token%2001;pin-value=1234;object=Ostiarius%20Server%20Key%2001";
-    const VALID_URL_ENCODED_PASSWD: &'static str =
+    const VALID_URL_ENCODED_PASSWD: &str =
         "pkcs11:token=Ostiarius%20Token%2002;object=Ostiarius%20Server%20key%2002;pin-value=%20%3C%3E%23%25%2B%7B%7D%7C%5C%5E%7E%5B%5D%60%3B%2F%3F%3A%40%3D%26%24?module-path=/usr/lib64/libsofthsm2.so";
 
     #[test]

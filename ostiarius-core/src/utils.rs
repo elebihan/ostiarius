@@ -58,7 +58,7 @@ mod tests {
     fn test_insert_password() {
         let mut psswd = " <>#%+{}|\\^~[]`;/?:@=&$";
         let url = "pkcs11:token=Ostiarius%20Token%2002?module-path=/usr/lib64/libsofthsm2.so";
-        let test = insert_password(&mut psswd, url).unwrap();
+        let test = insert_password(psswd, url).unwrap();
         assert_eq!(test, "pkcs11:token=Ostiarius%20Token%2002;pin-value=%20%3C%3E%23%25%2B%7B%7D%7C%5C%5E%7E%5B%5D%60%3B%2F%3F%3A%40%3D%26%24?module-path=/usr/lib64/libsofthsm2.so");
     }
 
