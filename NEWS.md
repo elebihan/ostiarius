@@ -1,5 +1,18 @@
 # What's New?
 
+## [0.6.0] - 2023-04-20
+### Changed
+
+- Handle special characters in passwords
+- Strip trailing newline in Password::provide()
+- Use SoftHSM for tests using PKCS11 token with special characters
+
+### Fixed
+
+- Fix code formatting
+- core: authorization: tests: fix create_checker()
+- core: fix clippy warnings
+
 ## [0.4.2] - 2022-12-19
 ### Fixed
 
