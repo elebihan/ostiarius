@@ -8,7 +8,7 @@ command.
 # Building instructions
 
 This project is written in Rust, so you'll need to install a [Rust
-toolchain](https://www.rust-lang.org/) to build it.
+toolchain][rust] to build it.
 
 Client and server can easily be built using:
 
@@ -18,8 +18,8 @@ cargo build --release
 ```
 
 Cross-compiling client and server fo different architectures can be done using
-[cross](https://github.com/cross-rs/cross). For example, to compile the client
-for an ARM target and the server for MS Windows, execute:
+[cross][cross]. For example, to compile the client for an ARM target and the
+server for MS Windows, execute:
 
 ```sh
 cross build --target x86_64-pc-windows-gnu -p ostiarius-server
@@ -98,3 +98,6 @@ Copyright (c) 2022 Eric Le Bihan
 This program is distributed under the terms of the MIT License.
 
 See the [LICENSE](LICENSE) file for license details.
+
+[cross]: https://github.com/cross-rs/cross
+[rust]: https://www.rust-lang.org/
