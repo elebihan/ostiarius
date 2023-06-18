@@ -6,7 +6,9 @@
 
 use anyhow::Context;
 use gumdrop::Options;
-use ostiarius_core::{Error, Requester};
+use ostiarius_core::{
+    crypto::password::PasswordProvider, utils::insert_password, Error, Requester,
+};
 use reqwest::blocking;
 use uuid::Uuid;
 
@@ -18,10 +20,17 @@ struct ClientOptions {
     version: bool,
     #[options(help = "Set client name")]
     name: Option<String>,
-    #[options(help = "Path to client private key")]
+    #[options(help = "URI of server private key", meta = "URI")]
     priv_key: Option<String>,
     #[options(help = "Path to server public key")]
     server_pub_key: Option<String>,
+    #[options(
+        help = "Password provider",
+        meta = "PROVIDER",
+        long = "password",
+        short = "S"
+    )]
+    password_provider: Option<String>,
     #[options(free)]
     url: String,
     #[options(free)]
@@ -42,14 +51,24 @@ fn main() -> anyhow::Result<()> {
             .map_err(Error::InvalidPath)
             .context("failed to convert hostname")?,
     };
-    let server_pubkey = options
+    let server_pub_key = options
         .server_pub_key
         .unwrap_or_else(|| "server.pubkey.pem".to_string());
-    let client_privkey = options
+    let mut path = std::env::current_dir().context("failed to get current directory")?;
+    path.push("server.privkey.pem");
+    let client_priv_key = options
         .priv_key
-        .unwrap_or_else(|| "client.privkey.pem".to_string());
+        .unwrap_or(format!("file://{}", path.display()));
+    let password_provider = match options.password_provider {
+        Some(provider) => provider.parse()?,
+        None => PasswordProvider::Prompt,
+    };
+    let password = password_provider
+        .provide()
+        .context("failed to get password")?;
+    let client_priv_key = insert_password(&password, &client_priv_key)?;
     let requester =
-        Requester::new(server_pubkey, client_privkey).context("failed to create requester")?;
+        Requester::new(&client_priv_key, server_pub_key).context("failed to create requester")?;
     let request = requester
         .make(&name, &options.command)
         .context("failed to make request")?;

@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-use cryptoki;
 use openssl;
 use thiserror::Error;
 use toml;
@@ -30,6 +29,7 @@ pub enum Error {
     InvalidPath(std::ffi::OsString),
     #[error("Invalid URI: {0}")]
     InvalidUri(String),
+    #[cfg(feature = "pkcs11")]
     #[error("PKCS#11 error: {0}")]
     Pkcs11(#[from] cryptoki::error::Error),
     #[error("Invalid key: {0}")]
