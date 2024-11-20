@@ -4,6 +4,7 @@ members = [
   "ostiarius-core",
   "ostiarius-server",
 ]
+resolver = "2"
 
 [workspace.package]
 version = "0.7.1"
