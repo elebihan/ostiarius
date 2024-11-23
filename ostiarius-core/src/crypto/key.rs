@@ -4,11 +4,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-mod openssl;
-pub mod password;
-#[cfg(feature = "pkcs11")]
-mod pkcs11;
-
 #[cfg(feature = "pkcs11")]
 use crate::crypto::pkcs11::Pkcs11RsaPrivateKey;
 use crate::{crypto::openssl::FileRsaPrivateKey, Error, Result};

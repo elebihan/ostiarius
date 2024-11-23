@@ -5,5 +5,9 @@
 //
 
 mod key;
+mod openssl;
+pub mod password;
+#[cfg(feature = "pkcs11")]
+mod pkcs11;
 
-pub use key::FileRsaPrivateKey;
+pub use key::{PrivateKey, RsaPrivateKey};
