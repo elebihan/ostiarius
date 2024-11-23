@@ -5,10 +5,44 @@ authorization to execute a command to a server, by submitting a challenge
 using a REST API. If the challenge succeeds, the client can execute the
 command.
 
+It is meant to run on machines without physical access.
+
+# The why and the therefore
+
+In such a system where the client requests data from a server, the authenticity
+of each party should be ensured, otherwise the system is vulnerable to
+man-in-the-middle attacks. Besides, ensuring the confidentiality of the data
+would prevent an attacker from snooping data.
+
+So one could think of using HTTPS with mutual authentication between client and
+server, which ensures both authenticity and confidentiality.
+
+However Ostiarius does not use HTTPS for the following reason:
+
+- it is written in Rust and uses secrets stored on PKCS#11 tokens: unfortunately
+  Rust TLS stacks (such as [RustTLS][rustls]) do not support this (yet).
+
+So to ensure authenticity, Ostiarius uses the exchange of a RSA encrypted random
+secret:
+
+- client generates the challenge (a random number).
+- client encrypts the challenge with the server public key.
+- client sends the encrypted challenge to the server.
+- server decrypts the encrypted challenge with its private key.
+- server encrypts the challenge with the client public key.
+- server sends the encrypted challenge to the client.
+- client decrypts the encrypted challenge with its private key.
+
+The client only proceeds if the random number decrypted in the response matches
+the one sent in the request.
+
+This relies on the secrecy of the private keys, which should be stored on
+PKCS#11 tokens for maximum security.
+
 # Building instructions
 
 This project is written in Rust, so you'll need to install a [Rust
-toolchain](https://www.rust-lang.org/) to build it.
+toolchain][rust] to build it.
 
 Client and server can easily be built using:
 
@@ -18,8 +52,8 @@ cargo build --release
 ```
 
 Cross-compiling client and server fo different architectures can be done using
-[cross](https://github.com/cross-rs/cross). For example, to compile the client
-for an ARM target and the server for MS Windows, execute:
+[cross][cross]. For example, to compile the client for an ARM target and the
+server for MS Windows, execute:
 
 ```sh
 cross build --target x86_64-pc-windows-gnu -p ostiarius-server
@@ -98,3 +132,7 @@ Copyright (c) 2022 Eric Le Bihan
 This program is distributed under the terms of the MIT License.
 
 See the [LICENSE](LICENSE) file for license details.
+
+[cross]: https://github.com/cross-rs/cross
+[rust]: https://www.rust-lang.org/
+[rustls]: https://github.com/rustls/rustls

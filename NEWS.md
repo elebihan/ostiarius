@@ -1,5 +1,20 @@
 # What's New?
 
+## [0.8.0] - 2024-11-23
+### Changed
+
+- Cargo.toml: set workspace resolver to 2
+- README: explain authentication mechanism
+- client: make PKCS#11 support optional
+- core, client: make Requester use RsaPrivateKey
+- core: crypto: openssl: use Url::to_file_path()
+- core: make PKCS#11 support optional
+- core: refactor crypto module
+
+### Fixed
+
+- README: cosmetic fix for hyperlinks
+
 ## [0.6.0] - 2023-04-20
 ### Changed
 

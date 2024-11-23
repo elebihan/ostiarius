@@ -4,9 +4,10 @@ members = [
   "ostiarius-core",
   "ostiarius-server",
 ]
+resolver = "2"
 
 [workspace.package]
-version = "0.6.0"
+version = "0.8.0"
 authors = ["Eric Le Bihan <eric.le.bihan.dev@free.fr>"]
 edition = "2021"
 license = "MIT"
