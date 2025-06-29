@@ -36,7 +36,7 @@ impl Requester {
         let priv_key = RsaPrivateKey::from_uri(priv_key_uri)?;
         let checker_pub_key = std::fs::read(checker_pub_key_path)?;
         let checker_pub_key = Rsa::public_key_from_pem(&checker_pub_key)?;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut token = [0u8; 32];
         rng.fill(&mut token);
         let requester = Requester {
