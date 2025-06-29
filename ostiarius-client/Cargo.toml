@@ -11,9 +11,9 @@ default = ["pkcs11"]
 pkcs11 = ["ostiarius-core/pkcs11"]
 
 [dependencies]
-anyhow = "1.0.59"
-gumdrop = "0.8.1"
+anyhow = { workspace = true }
+gumdrop = { workspace = true }
 hostname = "0.3.1"
 ostiarius-core = { path = "../ostiarius-core", default-features = false }
 reqwest = { version = "0.11.11", default-features = false, features = ["blocking", "json"] }
-uuid = "1.1.2"
+uuid = { workspace = true }

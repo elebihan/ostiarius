@@ -1,5 +1,12 @@
 # What's New?
 
+## [0.8.2] - 2025-06-29
+### Changed
+
+- Bump uuid to 1.15.1
+- Declare some dependencies at workspace level
+- core: bump rand to 0.9
+
 ## [0.8.0] - 2024-11-23
 ### Changed
 
